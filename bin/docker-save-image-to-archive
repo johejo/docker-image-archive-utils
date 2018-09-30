@@ -1,0 +1,91 @@
+#! /usr/bin/env bash
+
+usage(){
+cat <<_EOT_
+  Usage: $0 [-i IMAGE] [-t TAG] [-o FILE] [-c COMPRESS_PROG] [-q] [-v] [-h]
+
+  Description:
+    Save docker image to compressed archive.
+  
+  Options:
+    -i <IMAGE>
+    -t <TAG>
+    -o <FILE> Output file (default <IMAGE>-<TAG>.tar.gz) 
+    -c <COMPRESS_PROG> Set compress prog such as "gzip" or "xz" (default gzip or pigz)
+    -q Quiet mode
+    -v Show version and quit
+    -h Show this help and quit
+_EOT_
+}
+
+version(){
+  echo "docker-save-image-to-archive v0.1"
+}
+
+while getopts i:t:o:c:qvh OPT
+do
+  case $OPT in
+    i)
+      image=$OPTARG
+      ;;
+    t)
+      tag=$OPTARG
+      ;;
+    o)
+      file=$OPTARG
+      ;;
+    c)
+      compress=$OPTARG
+      ;;
+    q)
+      quiet=1
+      ;;
+    v)
+      version
+      exit 0
+      ;;
+    h)
+      usage
+      exit 0
+      ;;
+    \?)
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+if [ "x$image" = "x" ]; then
+  usage
+  exit 1
+fi
+
+if [ "x$tag" = "x" ]; then
+  usage
+  exit 1
+fi
+
+if [ "x$file" = "x" ]; then
+  file="$image-$tag.tar.gz"
+fi
+
+if [ "x$compress" = "x" ]; then
+  if type pigz > /dev/null 2>&1; then
+    compress=pigz
+  else
+    compress=gzip
+  fi
+else
+  if type $compress > /dev/null 2>&1; then
+    true
+  else
+    echo "$compress: command not found."
+    exit 1
+  fi
+fi
+
+if [ "x$quiet" = "x" ]; then
+  echo "IMAGE=$image, TAG=$tag, COMPRESS=$compress, FILE=$file"
+fi
+
+docker save $image:$tag | $compress -c > $file

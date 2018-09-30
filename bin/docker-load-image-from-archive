@@ -1,0 +1,80 @@
+#! /usr/bin/env bash
+
+usage(){
+cat <<_EOT_
+  Usage: $0 [OPTIONS] [FILE]
+
+  Description:
+    Load docker image from compressed archive.
+
+  Options:
+    -f <FILE>
+    -c <DECOMPRESS_PROG> Set compress prog such as "gunzip" or "unxz" (default gunzip or unpigz)
+    -q Quiet mode
+    -v Show version and quit
+    -h Show this help and quit
+_EOT_
+}
+
+version(){
+  echo "docker-load-image-from-archive v0.1"
+}
+
+while getopts f:c:qvh OPT
+do
+  case $OPT in
+    f)
+      file=$OPTARG
+      ;;
+    c)
+      decompress=$OPTARG
+      ;;
+    q)
+      quiet=1
+      ;;
+    v)
+      version
+      exit 0
+      ;;
+    h)
+      usage
+      exit 0
+      ;;
+    \?)
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND - 1))
+
+if [ "x$file" = "x" ]; then
+  file="$1"
+fi
+
+if [ "x$file" = "x" ]; then
+  usage
+  exit 1
+fi
+
+if [ "x$decompress" = "x" ]; then
+  if type unpigz > /dev/null 2>&1; then
+    decompress=unpigz
+  else
+    decompress=gunzip
+  fi
+else
+  if type $decompress > /dev/null 2>&1; then
+    true
+  else
+    echo "$decompress: command not found."
+    exit 1
+  fi
+fi
+
+if [ "x$quiet" = "x" ]; then
+  echo "DECOMPRESS=$decompress, FILE=$file"
+fi
+
+$decompress -c $file | docker load
