@@ -30,7 +30,7 @@ $ make uninstall
 
 Save docker image to archive using gzip
 ```
-$ docker-save-image-to-archive -i alpine -t 3.8 -o alpine-3.8-tar.gz
+$ docker-save-image-to-archive -i alpine -t 3.8 -o alpine-3.8.tar.gz
 ```
 
 Load docker image from archive using gunzip
