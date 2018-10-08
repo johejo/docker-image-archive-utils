@@ -1,53 +1,55 @@
-#! /usr/bin/env bash
+#!/bin/sh
 
-usage(){
-cat <<_EOT_
-  Usage: $0 [OPTIONS] [FILE]
-
+usage () {
+cat << USAGE
+  Usage: docker-load-image-from-archive [OPTIONS] [-f ARCHIVE_FILE]
   Description:
     Load docker image from compressed archive.
-
   Options:
-    -f <FILE>
-    -c <DECOMPRESS_PROG> Set compress prog such as "gunzip" or "unxz" (default gunzip or unpigz)
-    -q Quiet mode
-    -v Show version and quit
-    -h Show this help and quit
-_EOT_
+    -f <ARCHIVE_FILE>
+    -z <DECOMPRESS_PROG> Set compress prog such as "gunzip" or "unxz" (default gunzip or unpigz)
+    -s Silent mode
+    -v Verbose mode
+    -h This help text
+USAGE
 }
 
-version(){
-  echo "docker-load-image-from-archive v0.1"
-}
+set -- `getopt f:z:svh "$@"`
 
-while getopts f:c:qvh OPT
+if [ $? != 0 ]; then
+  usage
+  exit 1
+fi
+
+for OPT in "$@"
 do
   case $OPT in
-    f)
-      file=$OPTARG
+    -f)
+      file=$2
+      shift 2
       ;;
-    c)
-      decompress=$OPTARG
+    -z)
+      decompressor=$2
+      shift 2
       ;;
-    q)
-      quiet=1
+    -s)
+      silent=1
+      shift
       ;;
-    v)
-      version
-      exit 0
+    -v)
+      verbose=1
+      shift
       ;;
-    h)
+    -h)
       usage
       exit 0
       ;;
-    \?)
-      usage
-      exit 1
+    --)
+      shift
+      break
       ;;
   esac
 done
-
-shift $((OPTIND - 1))
 
 if [ "x$file" = "x" ]; then
   file="$1"
@@ -58,23 +60,29 @@ if [ "x$file" = "x" ]; then
   exit 1
 fi
 
-if [ "x$decompress" = "x" ]; then
+if [ "x$decompressor" = "x" ]; then
   if type unpigz > /dev/null 2>&1; then
-    decompress=unpigz
+    decompressor=unpigz
   else
-    decompress=gunzip
+    decompressor=gunzip
   fi
+fi
+
+if type $decompressor > /dev/null 2>&1; then
+  true
 else
-  if type $decompress > /dev/null 2>&1; then
-    true
-  else
-    echo "$decompress: command not found."
-    exit 1
-  fi
+  echo "$decompressor: command not found."
+  exit 1
 fi
 
-if [ "x$quiet" = "x" ]; then
-  echo "DECOMPRESS=$decompress, FILE=$file"
+if [ "x$silent" = "x1" ]; then
+  cmd="docker load -q"
+else
+  cmd="docker load"
 fi
 
-$decompress -c $file | docker load
+if [ "x$verbose" = "x1" ]; then
+  echo "decompressor=$decompressor, file=$file"
+fi
+
+$decompressor -c $file | $cmd

@@ -1,56 +1,62 @@
-#! /usr/bin/env bash
+#!/bin/sh
 
-usage(){
-cat <<_EOT_
-  Usage: $0 [-i IMAGE] [-t TAG] [-o FILE] [-c COMPRESS_PROG] [-q] [-v] [-h]
-
+usage () {
+cat << USAGE
+  Usage: docker-save-image-to-archive [-i IMAGE] [-t TAG] [-o FILE] [-z COMPRESS_PROG] [-c] [-s] [-v] [-h]
   Description:
     Save docker image to compressed archive.
-  
   Options:
-    -i <IMAGE>
-    -t <TAG>
-    -o <FILE> Output file (default <IMAGE>-<TAG>.tar.gz) 
-    -c <COMPRESS_PROG> Set compress prog such as "gzip" or "xz" (default gzip or pigz)
-    -q Quiet mode
-    -v Show version and quit
-    -h Show this help and quit
-_EOT_
+    -i <image>
+    -t <tag>
+    -o <file> (default <image>-<tag>.tar.gz)
+    -z <compressor> (pigz, or xz and so on)
+    -c Output stdout
+    -v Verbose mode
+    -h This help text
+USAGE
 }
 
-version(){
-  echo "docker-save-image-to-archive v0.1"
-}
+set -- `getopt i:t:o:z:cvh "$@"`
 
-while getopts i:t:o:c:qvh OPT
+if [ $? != 0 ]; then
+  usage
+  exit 1
+fi
+
+for OPT in "$@"
 do
   case $OPT in
-    i)
-      image=$OPTARG
+    -i)
+      image=$2
+      shift 2
       ;;
-    t)
-      tag=$OPTARG
+    -t)
+      tag=$2
+      shift 2
       ;;
-    o)
-      file=$OPTARG
+    -o)
+      file=$2
+      shift 2
       ;;
-    c)
-      compress=$OPTARG
+    -z)
+      compressor=$2
+      shift 2
       ;;
-    q)
-      quiet=1
+    -c)
+      stdout=1
+      shift
       ;;
-    v)
-      version
-      exit 0
+    -v)
+      verbose=1
+      shift
       ;;
-    h)
+    -h)
       usage
       exit 0
       ;;
-    \?)
-      usage
-      exit 1
+    --)
+      shift
+      break
       ;;
   esac
 done
@@ -69,23 +75,29 @@ if [ "x$file" = "x" ]; then
   file="$image-$tag.tar.gz"
 fi
 
-if [ "x$compress" = "x" ]; then
+if [ "x$compressor" = "x" ]; then
   if type pigz > /dev/null 2>&1; then
-    compress=pigz
+    compressor=pigz
   else
-    compress=gzip
+    compressor=gzip
   fi
+fi
+
+if type $compressor > /dev/null 2>&1; then
+  true
 else
-  if type $compress > /dev/null 2>&1; then
-    true
-  else
-    echo "$compress: command not found."
-    exit 1
+  echo "$compressor: command not found."
+  exit 1
+fi
+
+cmd="docker save $image:$tag"
+compress="$compressor -c"
+
+if [ "x$stdout" = "x1" ]; then
+  $cmd | $compress -f > /dev/stdout
+else
+  if [ "x$verbose" = "x1" ]; then
+    echo "image=$image, tag=$tag, file=$file compressor=$compressor"
   fi
+  $cmd | $compress > $file
 fi
-
-if [ "x$quiet" = "x" ]; then
-  echo "IMAGE=$image, TAG=$tag, COMPRESS=$compress, FILE=$file"
-fi
-
-docker save $image:$tag | $compress -c > $file
