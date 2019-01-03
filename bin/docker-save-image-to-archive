@@ -99,5 +99,5 @@ else
   if [ "x$verbose" = "x1" ]; then
     echo "image=$image, tag=$tag, file=$file compressor=$compressor"
   fi
-  $cmd | $compress > $file
+  "$cmd" | "$compress" > "$file"
 fi

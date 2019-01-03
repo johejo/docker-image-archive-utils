@@ -85,4 +85,4 @@ if [ "x$verbose" = "x1" ]; then
   echo "decompressor=$decompressor, file=$file"
 fi
 
-$decompressor -c $file | $cmd
+"$decompressor" -c "$file" | "$cmd"
