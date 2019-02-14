@@ -16,9 +16,10 @@ cat << USAGE
 USAGE
 }
 
-set -- `getopt i:t:o:z:cvh "$@"`
+set -- $(getopt i:t:o:z:cvh "$@")
+ret=$?
 
-if [ $? != 0 ]; then
+if [ $ret != 0 ]; then
   usage
   exit 1
 fi
@@ -94,10 +95,10 @@ cmd="docker save $image:$tag"
 compress="$compressor -c"
 
 if [ "x$stdout" = "x1" ]; then
-  $cmd | $compress -f > /dev/stdout
+  eval "$cmd | $compress -f > /dev/stdout"
 else
   if [ "x$verbose" = "x1" ]; then
     echo "image=$image, tag=$tag, file=$file compressor=$compressor"
   fi
-  "$cmd" | "$compress" > "$file"
+  eval "$cmd | $compress > $file"
 fi

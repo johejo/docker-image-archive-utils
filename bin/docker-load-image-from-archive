@@ -14,7 +14,7 @@ cat << USAGE
 USAGE
 }
 
-set -- `getopt f:z:svh "$@"`
+set -- $(getopt f:z:svh "$@")
 
 if [ $? != 0 ]; then
   usage
@@ -85,4 +85,4 @@ if [ "x$verbose" = "x1" ]; then
   echo "decompressor=$decompressor, file=$file"
 fi
 
-"$decompressor" -c "$file" | "$cmd"
+eval "$decompressor -c $file | $cmd"
