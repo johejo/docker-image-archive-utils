@@ -1,7 +1,7 @@
 #!/bin/sh
 
-usage () {
-cat << USAGE
+usage() {
+  cat <<USAGE
   Usage: docker-load-image-from-archive [OPTIONS] [-f ARCHIVE_FILE]
   Description:
     Load docker image from compressed archive.
@@ -15,39 +15,39 @@ USAGE
 }
 
 set -- $(getopt f:z:svh "$@")
+ret="$?"
 
-if [ $? != 0 ]; then
+if [ "$ret" != 0 ]; then
   usage
   exit 1
 fi
 
-for OPT in "$@"
-do
+for OPT in "$@"; do
   case $OPT in
-    -f)
-      file=$2
-      shift 2
-      ;;
-    -z)
-      decompressor=$2
-      shift 2
-      ;;
-    -s)
-      silent=1
-      shift
-      ;;
-    -v)
-      verbose=1
-      shift
-      ;;
-    -h)
-      usage
-      exit 0
-      ;;
-    --)
-      shift
-      break
-      ;;
+  -f)
+    file=$2
+    shift 2
+    ;;
+  -z)
+    decompressor=$2
+    shift 2
+    ;;
+  -s)
+    silent=1
+    shift
+    ;;
+  -v)
+    verbose=1
+    shift
+    ;;
+  -h)
+    usage
+    exit 0
+    ;;
+  --)
+    shift
+    break
+    ;;
   esac
 done
 
@@ -61,14 +61,14 @@ if [ "x$file" = "x" ]; then
 fi
 
 if [ "x$decompressor" = "x" ]; then
-  if type unpigz > /dev/null 2>&1; then
+  if type unpigz >/dev/null 2>&1; then
     decompressor=unpigz
   else
     decompressor=gunzip
   fi
 fi
 
-if type $decompressor > /dev/null 2>&1; then
+if type $decompressor >/dev/null 2>&1; then
   true
 else
   echo "$decompressor: command not found."

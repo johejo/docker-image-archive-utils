@@ -1,7 +1,7 @@
 #!/bin/sh
 
-usage () {
-cat << USAGE
+usage() {
+  cat <<USAGE
   Usage: docker-save-image-to-archive [-i IMAGE] [-t TAG] [-o FILE] [-z COMPRESS_PROG] [-c] [-s] [-v] [-h]
   Description:
     Save docker image to compressed archive.
@@ -24,41 +24,40 @@ if [ $ret != 0 ]; then
   exit 1
 fi
 
-for OPT in "$@"
-do
+for OPT in "$@"; do
   case $OPT in
-    -i)
-      image=$2
-      shift 2
-      ;;
-    -t)
-      tag=$2
-      shift 2
-      ;;
-    -o)
-      file=$2
-      shift 2
-      ;;
-    -z)
-      compressor=$2
-      shift 2
-      ;;
-    -c)
-      stdout=1
-      shift
-      ;;
-    -v)
-      verbose=1
-      shift
-      ;;
-    -h)
-      usage
-      exit 0
-      ;;
-    --)
-      shift
-      break
-      ;;
+  -i)
+    image=$2
+    shift 2
+    ;;
+  -t)
+    tag=$2
+    shift 2
+    ;;
+  -o)
+    file=$2
+    shift 2
+    ;;
+  -z)
+    compressor=$2
+    shift 2
+    ;;
+  -c)
+    stdout=1
+    shift
+    ;;
+  -v)
+    verbose=1
+    shift
+    ;;
+  -h)
+    usage
+    exit 0
+    ;;
+  --)
+    shift
+    break
+    ;;
   esac
 done
 
@@ -77,14 +76,14 @@ if [ "x$file" = "x" ]; then
 fi
 
 if [ "x$compressor" = "x" ]; then
-  if type pigz > /dev/null 2>&1; then
+  if type pigz >/dev/null 2>&1; then
     compressor=pigz
   else
     compressor=gzip
   fi
 fi
 
-if type $compressor > /dev/null 2>&1; then
+if type $compressor >/dev/null 2>&1; then
   true
 else
   echo "$compressor: command not found."
